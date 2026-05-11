@@ -741,7 +741,8 @@
     const fallbackId = row.getAttribute("data-session-id") || row.getAttribute("data-testid") || "";
     const sessionId = codexThreadId || (idMatch && idMatch[1]) || fallbackId;
     const titleNode = row.querySelector(selectors.threadTitle);
-    const title = ((titleNode || row).textContent || "Untitled session").replace("导出", "").replace("删除", "").trim().slice(0, 160);
+    const rawTitle = (titleNode?.textContent || (titleNode ? "" : (row.textContent || "Untitled session")));
+    const title = (titleNode ? rawTitle : rawTitle.replace("导出", "").replace("删除", "")).trim().slice(0, 160);
     return { session_id: sessionId, title };
   }
 

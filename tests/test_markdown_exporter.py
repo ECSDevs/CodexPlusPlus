@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime
 
 from codex_session_delete.markdown_exporter import MarkdownExportService
 from codex_session_delete.models import ExportStatus, SessionRef
@@ -28,16 +29,18 @@ def test_markdown_exporter_exports_user_and_assistant_messages_with_timestamps(t
     create_codex_thread_db(db_path, rollout_path)
 
     result = MarkdownExportService(db_path).export(SessionRef(session_id="t1", title="Ignored title"))
+    expected_user_time = datetime.fromisoformat("2026-05-10T13:12:06+00:00").astimezone().strftime("%Y-%m-%d %H:%M:%S")
+    expected_assistant_time = datetime.fromisoformat("2026-05-10T13:12:09+00:00").astimezone().strftime("%Y-%m-%d %H:%M:%S")
 
     assert result.status == ExportStatus.EXPORTED
     assert result.filename == "Codex Thread-t1.md"
     assert result.markdown == (
         "# Codex Thread\n\n"
         "### User\n"
-        "_2026-05-10 21:12:06_\n\n"
+        f"_{expected_user_time}_\n\n"
         "Hello\n\n"
         "### Assistant\n"
-        "_2026-05-10 21:12:09_\n\n"
+        f"_{expected_assistant_time}_\n\n"
         "Hi there\n"
     )
 
@@ -123,6 +126,23 @@ def test_markdown_exporter_sanitizes_filename_and_appends_thread_id(tmp_path):
     assert result.filename.endswith("-thread-1.md")
     assert "<" not in result.filename
     assert len(result.filename.split("-thread-1.md")[0]) <= 80
+
+
+def test_markdown_exporter_strips_trailing_space_or_dot_after_truncation(tmp_path):
+    db_path = tmp_path / "state_5.sqlite"
+    rollout_path = tmp_path / "rollout.jsonl"
+    rollout_path.write_text(
+        '{"type":"response_item","timestamp":"2026-05-10T13:12:06Z","payload":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"Hello"}]}}\n',
+        encoding="utf-8",
+    )
+    create_codex_thread_db(db_path, rollout_path, thread_id="t1", title=("A" * 79) + ".")
+
+    result = MarkdownExportService(db_path).export(SessionRef(session_id="t1", title="ignored"))
+
+    assert result.status == ExportStatus.EXPORTED
+    assert result.filename is not None
+    assert not result.filename.startswith((" ", "."))
+    assert not result.filename.split("-t1.md")[0].endswith((" ", "."))
 
 
 def test_markdown_exporter_skips_invalid_timestamp_but_keeps_body(tmp_path):

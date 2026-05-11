@@ -130,7 +130,7 @@ class MarkdownExportService:
     def _build_filename(self, title: str, thread_id: str) -> str:
         cleaned_title = _WINDOWS_FILENAME_CHARS_RE.sub(" ", title)
         cleaned_title = _WHITESPACE_RE.sub(" ", cleaned_title).strip(" .")
-        safe_title = (cleaned_title or "Untitled session")[:80]
+        safe_title = (cleaned_title or "Untitled session")[:80].rstrip(" .") or "Untitled session"
         safe_thread_id = _WINDOWS_FILENAME_CHARS_RE.sub("-", thread_id).strip() or "thread"
         return f"{safe_title}-{safe_thread_id}.md"
 
