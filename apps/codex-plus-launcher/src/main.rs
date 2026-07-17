@@ -276,20 +276,6 @@ impl LaunchHooks for LauncherHooks {
         self.core.load_settings().await
     }
 
-    async fn run_provider_sync(&self) -> anyhow::Result<()> {
-        let _ = tokio::task::spawn_blocking(|| codex_plus_data::run_provider_sync(None))
-            .await
-            .map_err(|error| anyhow::anyhow!("provider sync task failed: {error}"))?;
-        Ok(())
-    }
-
-    async fn apply_active_relay_profile(
-        &self,
-        settings: &codex_plus_core::settings::BackendSettings,
-    ) -> anyhow::Result<()> {
-        self.core.apply_active_relay_profile(settings).await
-    }
-
     async fn ensure_computer_use_config(
         &self,
         settings: &codex_plus_core::settings::BackendSettings,

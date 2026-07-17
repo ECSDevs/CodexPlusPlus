@@ -2172,7 +2172,7 @@ body {
   gap: 6px;
 }
 
-.provider-sync-progress {
+.task-progress {
   display: grid;
   gap: 8px;
   border: 1px solid hsl(var(--border));
@@ -2182,12 +2182,12 @@ body {
   margin-top: 12px;
 }
 
-.provider-sync-progress[data-active="true"] {
+.task-progress[data-active="true"] {
   border-color: hsl(var(--primary) / 0.38);
   background: hsl(var(--accent) / 0.35);
 }
 
-.provider-sync-progress-head {
+.task-progress-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2195,19 +2195,19 @@ body {
   font-size: 13px;
 }
 
-.provider-sync-progress-head span,
-.provider-sync-progress small {
+.task-progress-head span,
+.task-progress small {
   color: hsl(var(--muted-foreground));
 }
 
-.provider-sync-progress-bar {
+.task-progress-bar {
   overflow: hidden;
   height: 8px;
   border-radius: 999px;
   background: hsl(var(--muted));
 }
 
-.provider-sync-progress-fill {
+.task-progress-fill {
   height: 100%;
   border-radius: inherit;
   background: hsl(var(--brand-accent));
@@ -3830,7 +3830,7 @@ select {
 .provider-doctor-check,
 .provider-doctor-step,
 .zed-remote-project-row,
-.provider-sync-progress {
+.task-progress {
   border-color: hsl(var(--border));
   border-radius: 8px;
   background: hsl(var(--surface-raised));
@@ -4008,7 +4008,7 @@ select {
 
 .context-enabled-switch.active .context-switch-track,
 .provider-doctor-progress > div,
-.provider-sync-progress-fill,
+.task-progress-fill,
 .toast-progress {
   background: hsl(var(--brand-accent));
 }

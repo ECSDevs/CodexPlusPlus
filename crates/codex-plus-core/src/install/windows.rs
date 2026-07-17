@@ -8,7 +8,7 @@ use super::{
 const UNINSTALL_SUBKEY: &str = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\CodexPlusPlus";
 const LEGACY_UNINSTALL_SUBKEY: &str =
     r"Software\Microsoft\Windows\CurrentVersion\Uninstall\Codex++";
-const URL_PROTOCOL_SUBKEY: &str = r"Software\Classes\codexplusplus";
+const LEGACY_URL_PROTOCOL_SUBKEY: &str = r"Software\Classes\codexplusplus";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WindowsEntrypointPlan {
@@ -81,7 +81,6 @@ pub fn install_shortcuts(options: &InstallOptions) -> anyhow::Result<()> {
         "Open Codex++ management tool",
         PathBuf::from(&plan.manager_icon_path),
     )?;
-    register_url_protocol(&plan.manager_path)?;
     write_uninstall_registration(&plan)?;
     Ok(())
 }
@@ -92,15 +91,15 @@ pub fn uninstall_shortcuts(options: &InstallOptions) -> anyhow::Result<()> {
     let _ = std::fs::remove_file(&plan.silent_shortcut);
     let _ = std::fs::remove_file(&plan.manager_shortcut);
     let _ = crate::windows_integration::delete_current_user_key(&format!(
-        r"{URL_PROTOCOL_SUBKEY}\shell\open\command"
+        r"{LEGACY_URL_PROTOCOL_SUBKEY}\shell\open\command"
     ));
     let _ = crate::windows_integration::delete_current_user_key(&format!(
-        r"{URL_PROTOCOL_SUBKEY}\shell\open"
+        r"{LEGACY_URL_PROTOCOL_SUBKEY}\shell\open"
     ));
     let _ = crate::windows_integration::delete_current_user_key(&format!(
-        r"{URL_PROTOCOL_SUBKEY}\shell"
+        r"{LEGACY_URL_PROTOCOL_SUBKEY}\shell"
     ));
-    let _ = crate::windows_integration::delete_current_user_key(URL_PROTOCOL_SUBKEY);
+    let _ = crate::windows_integration::delete_current_user_key(LEGACY_URL_PROTOCOL_SUBKEY);
     let _ = crate::windows_integration::delete_current_user_key(LEGACY_UNINSTALL_SUBKEY);
     let _ = crate::windows_integration::delete_current_user_key(UNINSTALL_SUBKEY);
     Ok(())
@@ -154,26 +153,6 @@ fn write_uninstall_registration(plan: &WindowsEntrypointPlan) -> anyhow::Result<
     ] {
         crate::windows_integration::set_current_user_string_value(UNINSTALL_SUBKEY, name, &value)?;
     }
-    Ok(())
-}
-
-#[cfg(windows)]
-fn register_url_protocol(manager_path: &str) -> anyhow::Result<()> {
-    crate::windows_integration::set_current_user_string_value(
-        URL_PROTOCOL_SUBKEY,
-        "",
-        "URL:Codex++ Import Protocol",
-    )?;
-    crate::windows_integration::set_current_user_string_value(
-        URL_PROTOCOL_SUBKEY,
-        "URL Protocol",
-        "",
-    )?;
-    crate::windows_integration::set_current_user_string_value(
-        &format!(r"{URL_PROTOCOL_SUBKEY}\shell\open\command"),
-        "",
-        &format!("\"{manager_path}\" \"%1\""),
-    )?;
     Ok(())
 }
 

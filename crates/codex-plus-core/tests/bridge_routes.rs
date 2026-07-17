@@ -20,7 +20,7 @@ async fn bridge_routes_cover_all_current_paths() {
 
     let cases = [
         ("/settings/get", json!({})),
-        ("/settings/set", json!({"providerSyncEnabled": true})),
+        ("/settings/set", json!({"enhancementsEnabled": true})),
         ("/user-scripts/list", json!({})),
         ("/user-scripts/set-enabled", json!({"enabled": false})),
         (
@@ -315,12 +315,12 @@ async fn settings_routes_use_settings_service() {
     let updated = handle_bridge_request(
         ctx.clone(),
         "/settings/set",
-        json!({"providerSyncEnabled": true, "codexAppSessionDelete": false, "codexAppServiceTierControls": true, "codexAppPetRealMouseLook": true}),
+        json!({"enhancementsEnabled": true, "codexAppSessionDelete": false, "codexAppServiceTierControls": true, "codexAppPetRealMouseLook": true}),
     )
     .await;
     let loaded = handle_bridge_request(ctx, "/settings/get", json!({})).await;
 
-    assert_eq!(updated["providerSyncEnabled"], true);
+    assert_eq!(updated["enhancementsEnabled"], true);
     assert_eq!(updated["codexAppSessionDelete"], false);
     assert_eq!(updated["codexAppServiceTierControls"], true);
     assert_eq!(updated["codexAppPetRealMouseLook"], true);
@@ -1018,9 +1018,6 @@ impl BridgeSettingsService for FakeSettings {
         let current = self.settings.lock().unwrap().clone();
         let mut raw = serde_json::to_value(current).unwrap();
         let raw = raw.as_object_mut().unwrap();
-        if let Some(value) = payload.get("providerSyncEnabled").and_then(Value::as_bool) {
-            raw.insert("providerSyncEnabled".to_string(), json!(value));
-        }
         if let Some(value) = payload.get("enhancementsEnabled").and_then(Value::as_bool) {
             raw.insert("enhancementsEnabled".to_string(), json!(value));
         }
@@ -1380,10 +1377,6 @@ impl LaunchHooks for ContextHooks {
 
     async fn load_settings(&self) -> anyhow::Result<BackendSettings> {
         Ok(BackendSettings::default())
-    }
-
-    async fn run_provider_sync(&self) -> anyhow::Result<()> {
-        Ok(())
     }
 
     async fn start_helper(&self, _helper_port: u16) -> anyhow::Result<()> {

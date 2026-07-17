@@ -201,14 +201,6 @@ pub struct BackendSettings {
     pub codex_app_path: String,
     #[serde(rename = "codexExtraArgs", default)]
     pub codex_extra_args: Vec<String>,
-    #[serde(rename = "providerSyncEnabled", default)]
-    pub provider_sync_enabled: bool,
-    #[serde(rename = "providerSyncSavedProviders", default)]
-    pub provider_sync_saved_providers: Vec<String>,
-    #[serde(rename = "providerSyncManualProviders", default)]
-    pub provider_sync_manual_providers: Vec<String>,
-    #[serde(rename = "providerSyncLastSelectedProvider", default)]
-    pub provider_sync_last_selected_provider: String,
     #[serde(rename = "relayProfilesEnabled", default = "default_true")]
     pub relay_profiles_enabled: bool,
     #[serde(rename = "enhancementsEnabled", default = "default_true")]
@@ -342,10 +334,6 @@ impl Default for BackendSettings {
         Self {
             codex_app_path: String::new(),
             codex_extra_args: Vec::new(),
-            provider_sync_enabled: false,
-            provider_sync_saved_providers: Vec::new(),
-            provider_sync_manual_providers: Vec::new(),
-            provider_sync_last_selected_provider: String::new(),
             relay_profiles_enabled: true,
             enhancements_enabled: true,
             computer_use_guard_enabled: false,
@@ -782,9 +770,6 @@ fn merge_known_setting_fields(target: &mut Map<String, Value>, source: &Map<Stri
                     .collect(),
             ),
         );
-    }
-    if let Some(value) = source.get("providerSyncEnabled").and_then(Value::as_bool) {
-        target.insert("providerSyncEnabled".to_string(), Value::Bool(value));
     }
     if let Some(value) = source.get("relayProfilesEnabled").and_then(Value::as_bool) {
         target.insert("relayProfilesEnabled".to_string(), Value::Bool(value));
@@ -1294,7 +1279,6 @@ mod tests {
     #[test]
     fn settings_default_matches_expected_behavior() {
         let settings = BackendSettings::default();
-        assert!(!settings.provider_sync_enabled);
         assert!(settings.relay_profiles_enabled);
         assert!(settings.enhancements_enabled);
         assert!(!settings.computer_use_guard_enabled);
@@ -1336,11 +1320,10 @@ mod tests {
     #[test]
     fn settings_deserialize_ignores_removed_cli_wrapper_keys() {
         let settings: BackendSettings = serde_json::from_str(
-            r#"{"codexAppPath":"C:\\Portable\\Codex\\app","providerSyncEnabled":true,"codexGoalsEnabled":true,"cliWrapperEnabled":true,"cliWrapperBaseUrl":"https://example.test","cliWrapperApiKey":"sk-test","cliWrapperApiKeyEnv":""}"#,
+            r#"{"codexAppPath":"C:\\Portable\\Codex\\app","codexGoalsEnabled":true,"cliWrapperEnabled":true,"cliWrapperBaseUrl":"https://example.test","cliWrapperApiKey":"sk-test","cliWrapperApiKeyEnv":""}"#,
         )
         .unwrap();
         assert_eq!(settings.codex_app_path, r"C:\Portable\Codex\app");
-        assert!(settings.provider_sync_enabled);
         assert!(settings.codex_goals_enabled);
         assert_eq!(settings.relay_base_url, default_relay_base_url());
         assert!(settings.codex_extra_args.is_empty());
@@ -1764,7 +1747,6 @@ experimental_bearer_token = "sk-existing""#
         let dir = temp_dir();
         let store = SettingsStore::new(dir.join("nested").join("settings.json"));
         let settings = BackendSettings {
-            provider_sync_enabled: true,
             codex_extra_args: vec!["--force_high_performance_gpu".to_string()],
             ..BackendSettings::default()
         };
@@ -1837,14 +1819,12 @@ experimental_bearer_token = "sk-existing""#
         let dir = temp_dir();
         let store = SettingsStore::new(dir.join("settings.json"));
         let initial = BackendSettings {
-            provider_sync_enabled: false,
             ..BackendSettings::default()
         };
         store.save(&initial).unwrap();
 
         let updated = store
             .update(json!({
-            "providerSyncEnabled": true,
             "codexAppPath": "C:\\Portable\\Codex\\Codex.exe",
             "enhancementsEnabled": false,
             "codexAppSessionDelete": false,
@@ -1861,7 +1841,6 @@ experimental_bearer_token = "sk-existing""#
             }))
             .unwrap();
 
-        assert!(updated.provider_sync_enabled);
         assert_eq!(updated.codex_app_path, r"C:\Portable\Codex\Codex.exe");
         assert!(!updated.enhancements_enabled);
         assert!(!updated.codex_app_session_delete);
@@ -2163,21 +2142,15 @@ experimental_bearer_token = "sk-existing""#
         let dir = temp_dir();
         let path = dir.join("settings.json");
         let store = SettingsStore::new(path.clone());
-        std::fs::write(
-            &path,
-            r#"{"providerSyncEnabled":false,"customField":{"nested":true}}"#,
-        )
-        .unwrap();
+        std::fs::write(&path, r#"{"customField":{"nested":true}}"#).unwrap();
 
         let updated = store
             .update(json!({
-                "providerSyncEnabled": true
+                "codexAppPath": "C:\\Portable\\Codex\\Codex.exe"
             }))
             .unwrap();
         let saved: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
 
-        assert!(updated.provider_sync_enabled);
-        assert_eq!(saved["providerSyncEnabled"], json!(true));
         assert_eq!(saved["codexExtraArgs"], Value::Null);
         assert_eq!(saved["customField"], json!({"nested": true}));
     }
@@ -2187,11 +2160,7 @@ experimental_bearer_token = "sk-existing""#
         let dir = temp_dir();
         let path = dir.join("settings.json");
         let store = SettingsStore::new(path.clone());
-        std::fs::write(
-            &path,
-            r#"{"providerSyncEnabled":false,"customField":{"nested":true}}"#,
-        )
-        .unwrap();
+        std::fs::write(&path, r#"{"customField":{"nested":true}}"#).unwrap();
 
         let updated = store
             .update(json!({
@@ -2222,12 +2191,11 @@ experimental_bearer_token = "sk-existing""#
         let dir = temp_dir();
         let path = dir.join("settings.json");
         let store = SettingsStore::new(path.clone());
-        let original = r#"{"providerSyncEnabled":false,"customField":"keep me"}"#;
+        let original = r#"{"customField":"keep me"}"#;
         std::fs::write(&path, original).unwrap();
 
         let updated = store.update(json!(null)).unwrap();
 
-        assert!(!updated.provider_sync_enabled);
         assert_eq!(std::fs::read_to_string(&path).unwrap(), original);
     }
 }

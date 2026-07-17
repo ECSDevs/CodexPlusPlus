@@ -33,12 +33,8 @@ const ts = require("typescript");
 
 const WRITE = process.argv.includes("--write");
 
-// model-windows.ts is intentionally excluded: its only Chinese string is a
-// test-only error message, and model-windows.test.ts imports the module in
-// isolation under `node --test`, where an "@/i18n" dependency would not resolve.
 const FILES = [
   "src/App.tsx",
-  "src/components/ProviderPresetSelector.tsx",
 ];
 
 const CJK = /[㐀-䶿一-鿿　-〿＀-￯]/;

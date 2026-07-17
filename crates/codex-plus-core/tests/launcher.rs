@@ -855,7 +855,6 @@ async fn launch_lifecycle_runs_enabled_maintenance_without_applying_relay_profil
     let events = Arc::new(Mutex::new(Vec::<String>::new()));
     let hooks = FakeHooks::new(events.clone())
         .with_settings(BackendSettings {
-            provider_sync_enabled: true,
             relay_profiles_enabled: true,
             computer_use_guard_enabled: true,
             codex_app_plugin_marketplace_unlock: true,
@@ -886,7 +885,6 @@ async fn launch_lifecycle_runs_enabled_maintenance_without_applying_relay_profil
             "select-debug:9229",
             "select-helper:57321",
             "load-settings",
-            "provider-sync",
             "computer-use-guard",
             "start-helper:57321",
             "launch:9229",
@@ -899,7 +897,6 @@ async fn launch_lifecycle_runs_enabled_maintenance_without_applying_relay_profil
     );
     let events = events.lock().unwrap().clone();
     assert!(!events.contains(&"apply-relay".to_string()));
-    assert!(events.contains(&"provider-sync".to_string()));
     assert!(events.contains(&"computer-use-guard".to_string()));
     assert!(events.contains(&"computer-use-guard-watchdog".to_string()));
     assert_eq!(
@@ -1473,22 +1470,6 @@ async fn launch_lifecycle_keeps_packaged_process_id_running_and_retries_when_inj
 }
 
 #[tokio::test]
-async fn default_provider_sync_enabled_fails_instead_of_silently_skipping() {
-    let hooks = FakeHooks::new(Arc::new(Mutex::new(Vec::new()))).with_provider_sync_unsupported();
-
-    let error = hooks
-        .run_provider_sync()
-        .await
-        .expect_err("default-style provider sync should be explicit");
-
-    assert!(
-        error
-            .to_string()
-            .contains("provider sync requires launcher hooks")
-    );
-}
-
-#[tokio::test]
 async fn launch_continues_when_plugin_marketplace_config_fails() {
     let events = Arc::new(Mutex::new(Vec::new()));
     let hooks = FakeHooks::new(events.clone())
@@ -1545,20 +1526,6 @@ fn launcher_macos_cleanup_is_skipped_when_app_was_already_running() {
     assert_eq!(command, None);
 }
 
-#[tokio::test]
-async fn default_launch_hooks_provider_sync_enabled_returns_explicit_error() {
-    let error = DefaultLaunchHooks::default()
-        .run_provider_sync()
-        .await
-        .expect_err("default provider sync should not silently skip");
-
-    assert!(
-        error
-            .to_string()
-            .contains("provider sync requires launcher hooks")
-    );
-}
-
 #[derive(Clone)]
 struct FakeHooks {
     events: Arc<Mutex<Vec<String>>>,
@@ -1566,7 +1533,6 @@ struct FakeHooks {
     launch_result: CodexLaunch,
     launch_error: Option<String>,
     inject_error: Option<String>,
-    provider_sync_unsupported: bool,
     plugin_marketplace_error: Option<String>,
 }
 
@@ -1582,7 +1548,6 @@ impl FakeHooks {
             },
             launch_error: None,
             inject_error: None,
-            provider_sync_unsupported: false,
             plugin_marketplace_error: None,
         }
     }
@@ -1604,11 +1569,6 @@ impl FakeHooks {
 
     fn with_launch_error(mut self, message: &str) -> Self {
         self.launch_error = Some(message.to_string());
-        self
-    }
-
-    fn with_provider_sync_unsupported(mut self) -> Self {
-        self.provider_sync_unsupported = true;
         self
     }
 
@@ -1647,22 +1607,6 @@ impl LaunchHooks for FakeHooks {
     async fn load_settings(&self) -> anyhow::Result<BackendSettings> {
         self.event("load-settings");
         Ok(self.settings.clone())
-    }
-
-    async fn run_provider_sync(&self) -> anyhow::Result<()> {
-        self.event("provider-sync");
-        if self.provider_sync_unsupported {
-            anyhow::bail!("provider sync requires launcher hooks");
-        }
-        Ok(())
-    }
-
-    async fn apply_active_relay_profile(&self, settings: &BackendSettings) -> anyhow::Result<()> {
-        if !settings.relay_profiles_enabled {
-            return Ok(());
-        }
-        self.event("apply-relay");
-        Ok(())
     }
 
     async fn ensure_computer_use_config(&self, _settings: &BackendSettings) -> anyhow::Result<()> {

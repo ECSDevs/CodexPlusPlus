@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-CodexPlusPlus is a Rust workspace with a Tauri/React manager. Backend behavior lives in `crates/codex-plus-core`; persistence and provider synchronization are in `crates/codex-plus-data`. The launcher is in `apps/codex-plus-launcher`; the Tauri shell and TypeScript UI are in `apps/codex-plus-manager` (`src-tauri/` and `src/`). Rust integration tests are in crate `tests/` directories; frontend tests are `src/*.test.ts`. Use `assets/` for bundled resources, `docs/` for plans, and `scripts/installer/` for packaging.
+CodexPlusPlus is a Rust workspace with a Tauri/React manager. Backend behavior lives in `crates/codex-plus-core`; persistence and session data are in `crates/codex-plus-data`. The launcher is in `apps/codex-plus-launcher`; the Tauri shell and TypeScript UI are in `apps/codex-plus-manager` (`src-tauri/` and `src/`). Rust integration tests are in crate `tests/` directories; frontend tests are `src/*.test.ts`. Use `assets/` for bundled resources, `docs/` for plans, and `scripts/installer/` for packaging.
 
 ## AGENTS.md Maintenance
 
@@ -33,7 +33,7 @@ Add Rust unit/integration coverage for backend behavior and colocated `.test.ts`
 
 ## Commit & Pull Request Guidelines
 
-Use short imperative conventional-style subjects, such as `feat: add provider rotation`, `fix: reject invalid config`, or `test: cover relay routes`. Keep commits logically scoped. Every completed task must commit its relevant changes before handoff; do not leave task work uncommitted unless the user explicitly asks otherwise. PRs should explain the problem and solution, link related issues when applicable, describe testing performed, and include screenshots or recordings for visible UI changes. Call out platform-specific impact (Windows/macOS) and any configuration or migration considerations.
+Use short imperative conventional-style subjects, such as `feat: add session export`, `fix: reject invalid config`, or `test: cover launcher routes`. Keep commits logically scoped. Every completed task must commit its relevant changes before handoff; do not leave task work uncommitted unless the user explicitly asks otherwise. PRs should explain the problem and solution, link related issues when applicable, describe testing performed, and include screenshots or recordings for visible UI changes. Call out platform-specific impact (Windows/macOS) and any configuration or migration considerations.
 
 ## Security & Configuration Tips
 
