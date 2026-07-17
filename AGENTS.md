@@ -1,60 +1,40 @@
-# AGENTS.md
+# Repository Guidelines
 
-本文件为 CodexPlusPlus fork 的工作规范，指导 agent 在本仓库工作。
+## Project Structure & Module Organization
 
-## 项目概述
+CodexPlusPlus is a Rust workspace with a Tauri/React manager. Backend behavior lives in `crates/codex-plus-core`; persistence and provider synchronization are in `crates/codex-plus-data`. The launcher is in `apps/codex-plus-launcher`; the Tauri shell and TypeScript UI are in `apps/codex-plus-manager` (`src-tauri/` and `src/`). Rust integration tests are in crate `tests/` directories; frontend tests are `src/*.test.ts`. Use `assets/` for bundled resources, `docs/` for plans, and `scripts/installer/` for packaging.
 
-本仓库是 [BigPizzaV3/CodexPlusPlus](https://github.com/BigPizzaV3/CodexPlusPlus) 的 fork，目标是实现「按模型粒度配置上下文窗口与自动压缩阈值」feature（对应 issue #1171 / #931）。
+## AGENTS.md Maintenance
 
-采用 codex 原生 `model_catalog_json` 机制：通过 `model_list` 后缀语法（如 `deepseek-v4-pro[1M]`）声明每模型窗口，由 CodexPlusPlus 生成 catalog 文件并注入 config.toml 指针，codex 客户端运行时按模型识别各自窗口。
+Treat this file as maintained project documentation. For every future change that affects repository structure, development commands, dependencies, coding conventions, tests, release workflow, or security guidance, review whether `AGENTS.md` needs a corresponding update and include it in the same change when it does.
 
-## 仓库结构
+## Build, Test, and Development Commands
 
-- `crates/codex-plus-core/` — 核心 Rust 库（配置生成、catalog 解析、数据模型）
-- `apps/codex-plus-manager/` — Tauri 桌面应用，前端 React+TS
-- `crates/codex-plus-data/` — 数据持久化
-- `docs/` — 本 fork 的设计文档、调研、计划
+Run frontend commands from `apps/codex-plus-manager`:
 
-## 关键代码位置
+```bash
+npm install
+npm run dev             # Start the Tauri desktop app
+npm test                # Run frontend Node tests
+npm run check           # TypeScript check without emitting files
+npm run vite:build      # Build the web UI
+npm run build           # Build the release Tauri application
+```
 
-- 数据模型：`crates/codex-plus-core/src/settings.rs` 的 `RelayProfile` 结构体
-- 配置生成：`crates/codex-plus-core/src/relay_config.rs` 的 `apply_context_limits_to_config`
-- catalog 解析：`crates/codex-plus-core/src/model_catalog.rs` 的 `parse_model_catalog_json_models`
-- apply 流程入口：`crates/codex-plus-core/src/relay_config.rs` 的 `apply_relay_profile_to_home_with_switch_rules_and_computer_use_guard`
-- 前端模型列表：`apps/codex-plus-manager/src/App.tsx` 的 `modelList` textarea
+From the repository root, use `cargo build --release` for release binaries, `cargo test --workspace` for all Rust tests, `cargo fmt --all -- --check` to verify formatting, and `cargo clippy --workspace --all-targets --all-features` for linting. Run focused tests with, for example, `cargo test -p codex-plus-core --test model_suffix`.
 
-## 安全规则
+## Coding Style & Naming Conventions
 
-- 禁止批量删除、rm -rf、rmdir /s
-- 删除只能单个文件，删除前确认
-- 禁止 sudo、提权、curl | bash
-- 禁止泄露密钥、.env、auth.json、config.toml 凭据
-- 覆盖文件前确认
-- 不擅自改 Cargo.toml、package.json、.gitignore（除非任务必需）
+Use Rust 2024 conventions and `cargo fmt`; document public APIs with `///`. Use `snake_case` Rust names, `PascalCase` React components, and `camelCase` TypeScript variables/functions. Preserve the `@/*` import alias and strict TypeScript settings. Avoid generated `target/`, `dist/`, or `node_modules/` content.
 
-## 命令执行
+## Testing Guidelines
 
-- 执行 bash 命令前确认
-- 不运行未知脚本、不擅自装依赖
-- 测试用 cargo test，不另起工具链
+Add Rust unit/integration coverage for backend behavior and colocated `.test.ts` cases for UI utilities and flows. No coverage threshold is documented; behavior changes should include regression tests. Before a PR, run focused tests plus `cargo test --workspace`, `npm test`, `npm run check`, and applicable build/format checks.
 
-## 编码规范
+## Commit & Pull Request Guidelines
 
-- 对话用中文，代码可用英文，注释尽量中文
-- 保持上游代码风格统一（Rust 标准、React+TS）
-- 改动隔离 + opt-in，不破坏现有 per-profile 单值行为
-- 不做需求外的操作
+Use short imperative conventional-style subjects, such as `feat: add provider rotation`, `fix: reject invalid config`, or `test: cover relay routes`. Keep commits logically scoped. Every completed task must commit its relevant changes before handoff; do not leave task work uncommitted unless the user explicitly asks otherwise. PRs should explain the problem and solution, link related issues when applicable, describe testing performed, and include screenshots or recordings for visible UI changes. Call out platform-specific impact (Windows/macOS) and any configuration or migration considerations.
 
-## 测试约定
+## Security & Configuration Tips
 
-- 沿用上游 `#[test]` + tempfile 风格（见 `crates/codex-plus-core/tests/relay_config.rs`）
-- 断言读 config.toml 文本，如 `assert!(config.contains("model_catalog_json"))`
-- 改行为要同步改/加对应测试
-
-## 与上游同步
-
-- `upstream` = https://github.com/BigPizzaV3/CodexPlusPlus.git
-- `origin` = 用户自己的 GitHub fork（待创建）
-- feature 分支命名：`codex/per-model-context` 或类似
-- 定期 `git fetch upstream && git rebase upstream/main` 保持同步
-- 目标：全栈完成后向主仓提 PR 合并
+Do not commit API keys, provider credentials, local Codex configuration, or generated user data. Use example configuration files in `tools/codex-wechat/` as templates and review diffs for secrets before publishing changes.

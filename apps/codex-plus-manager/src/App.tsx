@@ -63,6 +63,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MaterialSwitch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { isGitHubRepositoryHomepage } from "./github-repository";
 import {
@@ -5308,21 +5309,17 @@ function FeatureToggle({
 }) {
   return (
     <label className={`feature-toggle ${disabled ? "disabled" : ""}`}>
-      <input
-        checked={checked}
-        disabled={disabled}
-        onChange={(event) => onChange(event.currentTarget.checked)}
-        type="checkbox"
-      />
+      <MaterialSwitch checked={checked} disabled={disabled} onCheckedChange={onChange} />
       <span>
         <strong>{title}</strong>
         <small>{detail}</small>
       </span>
-      <ToggleVisual />
     </label>
   );
 }
 
+// A few compact inline toggles retain this visual-only helper. The primary
+// feature controls above use Material Web's accessible md-switch component.
 function ToggleVisual() {
   return (
     <span aria-hidden="true" className="toggle-switch-visual">
