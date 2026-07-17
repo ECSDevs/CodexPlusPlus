@@ -1,0 +1,18 @@
+[package]
+name = "codex-plus-packager"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[build-dependencies]
+# Artifact dependencies (bindeps) guarantee the manager and launcher BINARIES
+# are fully linked before this crate's build.rs runs. Regular lib deps only
+# ensure the library is built, not the binary target.
+codex-plus-manager = { path = "../codex-plus-manager/src-tauri", artifact = "bin:codex-plus-plus-manager" }
+codex-plus-launcher = { path = "../codex-plus-launcher", artifact = "bin:codex-plus-plus" }
+zip.workspace = true

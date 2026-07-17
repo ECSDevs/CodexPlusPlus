@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-CodexPlusPlus is a Rust workspace with a Tauri/React manager. Backend behavior lives in `crates/codex-plus-core`; persistence and session data are in `crates/codex-plus-data`. The launcher is in `apps/codex-plus-launcher`; the Tauri shell and TypeScript UI are in `apps/codex-plus-manager` (`src-tauri/` and `src/`). Rust integration tests are in crate `tests/` directories; frontend tests are `src/*.test.ts`. Use `assets/` for bundled resources, `docs/` for plans, and `scripts/installer/` for packaging.
+CodexPlusPlus is a Rust workspace with a Tauri/React manager. Backend behavior lives in `crates/codex-plus-core`; persistence and session data are in `crates/codex-plus-data`. The launcher is in `apps/codex-plus-launcher`; the Tauri shell and TypeScript UI are in `apps/codex-plus-manager` (`src-tauri/` and `src/`). The `apps/codex-plus-packager` crate has no runtime code — its build script bundles release binaries into a zip after `cargo build --release`. Rust integration tests are in crate `tests/` directories; frontend tests are `src/*.test.ts`. Use `assets/` for bundled resources, `docs/` for plans, and `scripts/installer/` for packaging.
 
 ## AGENTS.md Maintenance
 
@@ -22,6 +22,8 @@ npm run build           # Build the release Tauri application
 ```
 
 From the repository root, use `cargo build --release` for release binaries, `cargo test --workspace` for all Rust tests, `cargo fmt --all -- --check` to verify formatting, and `cargo clippy --workspace --all-targets --all-features` for linting. Run focused tests with, for example, `cargo test -p codex-plus-core --test model_suffix`.
+
+The workspace requires nightly Rust (pinned via `rust-toolchain.toml`) because the release packager uses the unstable `bindeps` cargo feature for artifact dependencies. `cargo build` automatically compiles the Node.js frontend: the `codex-plus-manager` build script runs `npm install` (when `node_modules` is absent) and `npm run vite:build` before Tauri compiles, so no manual frontend step is required. On release builds, the `codex-plus-packager` crate uses artifact dependencies (`bindeps`, enabled in `.cargo/config.toml`) to guarantee the manager and launcher binaries are fully linked before its `build.rs` runs, then bundles them into `dist/<platform>/CodexPlusPlus-<version>-<platform>-<arch>.zip`.
 
 ## Coding Style & Naming Conventions
 

@@ -1,3 +1,6 @@
 [alias]
 xtest = "test --workspace --all-targets"
 xcheck = "check --workspace --all-targets"
+
+[unstable]
+bindeps = true
