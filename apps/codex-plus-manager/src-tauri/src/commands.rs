@@ -6,7 +6,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use codex_plus_core::install::SILENT_BINARY;
 use codex_plus_core::models::{DeleteResult, SessionRef};
 use codex_plus_core::script_market::{self, MarketScript, ScriptMarketManifest};
-use codex_plus_core::settings::{BackendSettings, RelayProfile, SettingsStore};
+use codex_plus_core::settings::{BackendSettings, SettingsStore};
 use codex_plus_core::status::{LaunchStatus, StatusStore};
 use codex_plus_core::user_scripts::UserScriptManager;
 use codex_plus_core::zed_remote::{ZedOpenStrategy, ZedRemoteProject};
@@ -674,6 +674,32 @@ fn normalize_settings_before_save(mut settings: BackendSettings) -> BackendSetti
         }
     }
     settings
+}
+
+fn log_manager_event(event: &str, detail: Value) {
+    let _ = codex_plus_core::diagnostic_log::append_diagnostic_log(event, detail);
+}
+
+fn sanitize_manager_event(event: &str) -> String {
+    let suffix = event
+        .trim()
+        .chars()
+        .map(|ch| {
+            if ch.is_ascii_alphanumeric() || matches!(ch, '_' | '-' | '.') {
+                ch
+            } else {
+                '_'
+            }
+        })
+        .collect::<String>();
+    let suffix = suffix.trim_matches(['.', '_', '-']).trim();
+    if suffix.is_empty() {
+        "manager.ui.event".to_string()
+    } else if suffix.starts_with("manager.") {
+        suffix.to_string()
+    } else {
+        format!("manager.ui.{suffix}")
+    }
 }
 
 fn relay_combined_common_config(settings: &BackendSettings) -> String {
@@ -1569,6 +1595,40 @@ fn empty_context_entries() -> codex_plus_core::relay_config::CodexContextEntries
         mcp_servers: Vec::new(),
         skills: Vec::new(),
         plugins: Vec::new(),
+    }
+}
+
+fn read_optional_text_file(path: &Path) -> anyhow::Result<String> {
+    match fs::read_to_string(path) {
+        Ok(contents) => Ok(contents),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(String::new()),
+        Err(error) => Err(error.into()),
+    }
+}
+
+fn ads_payload(payload: Value) -> AdsPayload {
+    AdsPayload {
+        version: payload.get("version").and_then(Value::as_u64).unwrap_or(1),
+        ads: payload
+            .get("ads")
+            .and_then(Value::as_array)
+            .cloned()
+            .unwrap_or_default(),
+    }
+}
+
+fn open_url(url: &str) -> anyhow::Result<()> {
+    #[cfg(windows)]
+    {
+        codex_plus_core::windows_open_url(url)
+    }
+    #[cfg(not(windows))]
+    {
+        std::process::Command::new("open")
+            .arg(url)
+            .spawn()
+            .map(|_| ())
+            .map_err(|error| anyhow::anyhow!("启动系统浏览器失败：{error}"))
     }
 }
 

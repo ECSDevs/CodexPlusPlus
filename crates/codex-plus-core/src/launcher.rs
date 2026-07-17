@@ -245,7 +245,7 @@ where
 {
     let hooks = hooks.into_launch_hooks();
     let debug_port = hooks.select_debug_port(options.debug_port);
-    let helper_port = hooks.select_helper_port(options.helper_port);
+    let mut helper_port = hooks.select_helper_port(options.helper_port);
     let settings = hooks.load_settings().await?;
     let app_dir = hooks.resolve_app_dir(options.app_dir.as_deref(), &settings)?;
     let status_store = options.status_store.clone();
@@ -286,7 +286,11 @@ where
                 );
             }
         }
-        if settings.enhancements_enabled {
+        let protocol_proxy_enabled = relay_protocol_proxy_enabled(&settings);
+        if protocol_proxy_enabled {
+            helper_port = crate::protocol_proxy::DEFAULT_PROTOCOL_PROXY_PORT;
+        }
+        if settings.enhancements_enabled || protocol_proxy_enabled {
             hooks.start_helper(helper_port).await?;
             helper_started = true;
         }
@@ -370,6 +374,10 @@ where
             Err(error)
         }
     }
+}
+
+fn relay_protocol_proxy_enabled(settings: &BackendSettings) -> bool {
+    settings.active_relay_uses_protocol_proxy()
 }
 
 fn select_native_menu_inspector_port(debug_port: u16) -> u16 {
