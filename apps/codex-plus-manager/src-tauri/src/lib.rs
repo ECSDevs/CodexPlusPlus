@@ -59,7 +59,6 @@ pub fn run() {
             commands::open_zed_remote,
             commands::forget_zed_remote_project,
             commands::delete_local_session,
-            commands::load_ads,
             commands::refresh_script_market,
             commands::install_market_script,
             commands::set_user_script_enabled,

@@ -33,7 +33,9 @@ Add Rust unit/integration coverage for backend behavior and colocated `.test.ts`
 
 ## Commit & Pull Request Guidelines
 
-Use short imperative conventional-style subjects, such as `feat: add session export`, `fix: reject invalid config`, or `test: cover launcher routes`. Keep commits logically scoped. Every completed task must commit its relevant changes before handoff; do not leave task work uncommitted unless the user explicitly asks otherwise. PRs should explain the problem and solution, link related issues when applicable, describe testing performed, and include screenshots or recordings for visible UI changes. Call out platform-specific impact (Windows/macOS) and any configuration or migration considerations.
+**Task completion requires commit.** Every finished task must end with a commit of its relevant changes before handoff; never leave task work uncommitted unless the user explicitly asks otherwise. This is mandatory and applies to every task regardless of size.
+
+Use short imperative conventional-style subjects, such as `feat: add session export`, `fix: reject invalid config`, or `test: cover launcher routes`. Keep commits logically scoped. PRs should explain the problem and solution, link related issues when applicable, describe testing performed, and include screenshots or recordings for visible UI changes. Call out platform-specific impact (Windows/macOS) and any configuration or migration considerations.
 
 ## Security & Configuration Tips
 

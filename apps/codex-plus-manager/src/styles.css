@@ -2399,105 +2399,6 @@ body {
   color: hsl(var(--primary));
 }
 
-.recommend-hero {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.recommend-hero strong,
-.recommend-hero span {
-  display: block;
-}
-
-.recommend-hero span {
-  margin-top: 3px;
-  color: hsl(var(--muted-foreground));
-  line-height: 1.45;
-}
-
-.ad-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.ad-card {
-  display: grid;
-  gap: 10px;
-  align-content: space-between;
-  min-height: 150px;
-  width: 100%;
-  border: 1px solid hsl(var(--border));
-  border-radius: 8px;
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
-  cursor: pointer;
-  font: inherit;
-  padding: 12px;
-  text-decoration: none;
-  text-align: left;
-  transition:
-    border-color 140ms ease,
-    background-color 140ms ease,
-    box-shadow 140ms ease,
-    transform 140ms ease;
-}
-
-.ad-card:hover {
-  border-color: hsl(var(--ring));
-  background: hsl(var(--accent));
-  box-shadow: 0 12px 26px hsl(var(--foreground) / 0.08);
-  transform: translateY(-1px);
-}
-
-.ad-image {
-  display: block;
-  width: 100%;
-  aspect-ratio: 16 / 5;
-  border: 1px solid hsl(var(--border));
-  border-radius: 8px;
-  background: #080808;
-  object-fit: cover;
-}
-
-.ad-card strong {
-  display: block;
-  margin-bottom: 5px;
-  font-size: 15px;
-}
-
-.ad-card p {
-  margin: 0;
-  color: hsl(var(--muted-foreground));
-  line-height: 1.5;
-}
-
-.ad-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.ad-tags span {
-  border: 1px solid hsl(var(--border));
-  border-radius: 999px;
-  background: hsl(var(--muted));
-  color: hsl(var(--foreground));
-  font-size: 12px;
-  line-height: 1;
-  padding: 5px 8px;
-}
-
-.ad-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: hsl(var(--foreground));
-  font-weight: 700;
-}
-
 .toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -3754,7 +3655,6 @@ select {
 }
 
 .jojocode-model-tags span,
-.ad-tags span,
 .script-market-tag {
   border-color: hsl(var(--border));
   background: hsl(var(--foreground) / 0.045);
@@ -3817,7 +3717,6 @@ select {
 .mobile-server-card,
 .session-row,
 .script-market-card,
-.ad-card,
 .health-item,
 .feature-item,
 .feature-toggle,
@@ -3847,7 +3746,6 @@ select {
 .relay-profile-card:focus-visible,
 .session-row:hover,
 .script-market-card:hover,
-.ad-card:hover,
 .mobile-server-card:hover,
 .health-item:hover,
 .feature-item:hover,
@@ -4060,14 +3958,8 @@ select {
   color: hsl(var(--brand-accent));
 }
 
-.ad-card,
 .script-market-card {
   padding: 14px;
-}
-
-.ad-image {
-  border-color: hsl(var(--border));
-  border-radius: 8px;
 }
 
 .log-lines {
@@ -4173,7 +4065,6 @@ select {
 
   .jojocode-overview-layout,
   .jojocode-overview-main,
-  .ad-grid,
   .mobile-server-grid {
     grid-template-columns: 1fr;
   }
