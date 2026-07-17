@@ -4205,12 +4205,28 @@ select {
 
 .workspace { background: var(--md-sys-color-surface); }
 .topbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   background: color-mix(in srgb, var(--md-sys-color-surface) 90%, transparent);
-  border-bottom-color: var(--md-sys-color-outline-variant);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
   padding: 24px 32px 18px;
+  min-height: 72px;
 }
-.topbar h1 { font-size: 28px; font-weight: 500; letter-spacing: -0.025em; }
-.topbar p { color: var(--md-sys-color-on-surface-variant); }
+.topbar h1 { font-size: 28px; font-weight: 500; letter-spacing: -0.025em; margin: 0; }
+.topbar p { color: var(--md-sys-color-on-surface-variant); margin: 4px 0 0; }
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.topbar-actions .m3-button { flex-shrink: 0; }
+.topbar-actions .m3-button:not(.m3-button--icon) { max-width: 200px; }
 .screen { padding: 24px 32px 40px; }
 
 .m3-card,
@@ -4231,14 +4247,78 @@ select {
 .m3-card-content { padding: 8px 20px 20px; }
 
 .m3-button {
-  --md-filled-button-container-height: 36px;
-  --md-outlined-button-container-height: 36px;
-  --md-text-button-container-height: 36px;
+  --md-filled-button-container-height: 40px;
+  --md-outlined-button-container-height: 40px;
+  --md-text-button-container-height: 40px;
+  --md-filled-tonal-button-container-height: 40px;
+  --md-filled-button-leading-space: 24px;
+  --md-filled-button-trailing-space: 24px;
+  --md-filled-tonal-button-leading-space: 24px;
+  --md-filled-tonal-button-trailing-space: 24px;
+  --md-outlined-button-leading-space: 24px;
+  --md-outlined-button-trailing-space: 24px;
+  --md-text-button-leading-space: 12px;
+  --md-text-button-trailing-space: 12px;
+  --md-filled-button-with-leading-icon-leading-space: 16px;
+  --md-filled-button-with-leading-icon-trailing-space: 24px;
+  --md-filled-tonal-button-with-leading-icon-leading-space: 16px;
+  --md-filled-tonal-button-with-leading-icon-trailing-space: 24px;
+  --md-outlined-button-with-leading-icon-leading-space: 16px;
+  --md-outlined-button-with-leading-icon-trailing-space: 24px;
+  --md-text-button-with-leading-icon-leading-space: 8px;
+  --md-text-button-with-leading-icon-trailing-space: 12px;
+  --md-filled-button-icon-size: 18px;
+  --md-filled-tonal-button-icon-size: 18px;
+  --md-outlined-button-icon-size: 18px;
+  --md-text-button-icon-size: 18px;
+  --md-filled-button-icon-color: var(--md-sys-color-on-primary);
+  --md-outlined-button-icon-color: var(--md-sys-color-primary);
+  --md-text-button-icon-color: var(--md-sys-color-primary);
+  max-width: 100%;
 }
 .m3-button:not(.m3-button--icon) { min-inline-size: 96px; }
-.m3-button--sm { --md-filled-button-container-height: 32px; --md-outlined-button-container-height: 32px; --md-text-button-container-height: 32px; }
-.m3-button--icon { --md-icon-button-icon-size: 19px; --md-icon-button-state-layer-size: 36px; display: inline-flex; align-items: center; justify-content: center; }
-.m3-button--icon svg { width: 18px; height: 18px; }
+.m3-button--sm {
+  --md-filled-button-container-height: 32px;
+  --md-outlined-button-container-height: 32px;
+  --md-text-button-container-height: 32px;
+  --md-filled-tonal-button-container-height: 32px;
+  --md-filled-button-leading-space: 16px;
+  --md-filled-button-trailing-space: 16px;
+  --md-filled-tonal-button-leading-space: 16px;
+  --md-filled-tonal-button-trailing-space: 16px;
+  --md-outlined-button-leading-space: 16px;
+  --md-outlined-button-trailing-space: 16px;
+  --md-text-button-leading-space: 8px;
+  --md-text-button-trailing-space: 8px;
+  --md-filled-button-with-leading-icon-leading-space: 12px;
+  --md-filled-button-with-leading-icon-trailing-space: 16px;
+  --md-filled-tonal-button-with-leading-icon-leading-space: 12px;
+  --md-filled-tonal-button-with-leading-icon-trailing-space: 16px;
+  --md-outlined-button-with-leading-icon-leading-space: 12px;
+  --md-outlined-button-with-leading-icon-trailing-space: 16px;
+  --md-text-button-with-leading-icon-leading-space: 6px;
+  --md-text-button-with-leading-icon-trailing-space: 8px;
+  --md-filled-button-icon-size: 16px;
+  --md-filled-tonal-button-icon-size: 16px;
+  --md-outlined-button-icon-size: 16px;
+  --md-text-button-icon-size: 16px;
+}
+.m3-button--icon {
+  --md-icon-button-icon-size: 20px;
+  --md-icon-button-state-layer-size: 40px;
+  --md-outlined-icon-button-icon-size: 20px;
+  --md-outlined-icon-button-state-layer-size: 40px;
+  flex-shrink: 0;
+}
+.m3-button--icon svg { width: 20px; height: 20px; }
+
+.m3-button-label {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .m3-text-field {
   --md-outlined-text-field-container-shape: 8px;

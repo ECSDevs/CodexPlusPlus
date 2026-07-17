@@ -15,8 +15,7 @@ fn main() {
 }
 
 fn build_frontend() {
-    let manifest_dir_str =
-        env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
+    let manifest_dir_str = env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
     let manifest_dir = Path::new(&manifest_dir_str);
     let manager_dir = manifest_dir
         .parent()
@@ -38,12 +37,30 @@ fn build_frontend() {
         panic!("vite build failed with status {status}");
     }
 
-    println!("cargo:rerun-if-changed={}", manager_dir.join("package.json").display());
-    println!("cargo:rerun-if-changed={}", manager_dir.join("package-lock.json").display());
-    println!("cargo:rerun-if-changed={}", manager_dir.join("vite.config.ts").display());
-    println!("cargo:rerun-if-changed={}", manager_dir.join("index.html").display());
-    println!("cargo:rerun-if-changed={}", manager_dir.join("tsconfig.json").display());
-    println!("cargo:rerun-if-changed={}", manager_dir.join("src").display());
+    println!(
+        "cargo:rerun-if-changed={}",
+        manager_dir.join("package.json").display()
+    );
+    println!(
+        "cargo:rerun-if-changed={}",
+        manager_dir.join("package-lock.json").display()
+    );
+    println!(
+        "cargo:rerun-if-changed={}",
+        manager_dir.join("vite.config.ts").display()
+    );
+    println!(
+        "cargo:rerun-if-changed={}",
+        manager_dir.join("index.html").display()
+    );
+    println!(
+        "cargo:rerun-if-changed={}",
+        manager_dir.join("tsconfig.json").display()
+    );
+    println!(
+        "cargo:rerun-if-changed={}",
+        manager_dir.join("src").display()
+    );
 }
 
 fn npm(args: &[&str], cwd: &Path) -> Command {

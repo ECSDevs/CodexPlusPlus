@@ -1,8 +1,17 @@
 //! Release packager build script.
 //!
-//! Runs after the manager and launcher binaries are built (guaranteed by the
-//! crate dependencies) and bundles them into a distributable zip archive.
-//! Only activates on release builds so debug builds stay fast.
+//! Runs after the manager library is built (ensured by the build dependency
+//! on `codex-plus-manager`) and bundles whatever release artifacts are present
+//! into a distributable zip archive. Only activates on release builds so debug
+//! builds stay fast.
+//!
+//! Unlike the previous bindeps-based approach, this script does NOT force the
+//! manager or launcher binaries to be linked before it runs. Instead it looks
+//! for the launcher binary, the manager binary, and the manager cdylib
+//! (codex_plus_manager_lib.dll/.dylib/.so) on disk and copies whichever of
+//! them exist. If a binary is still being linked when this script runs, the
+//! `cargo:rerun-if-changed` directives below ensure a subsequent
+//! `cargo build --release` will re-run this script and pick it up.
 
 use std::env;
 use std::fs;
@@ -32,34 +41,68 @@ fn package_release() -> Result<(), String> {
 
     let (platform, arch) = platform_arch();
     let ext = binary_extension();
+    let cdylib_name = manager_cdylib_name();
 
     let launcher_bin = profile_dir.join(format!("codex-plus-plus{ext}"));
     let manager_bin = profile_dir.join(format!("codex-plus-plus-manager{ext}"));
+    let manager_cdylib = profile_dir.join(&cdylib_name);
 
-    if !launcher_bin.exists() {
-        return Err(format!(
-            "launcher binary not found at {}",
+    // Re-run this script whenever the artifacts change (including when they
+    // are first created). Without bindeps the binaries may be linked after
+    // this build script runs on the first `cargo build --release`; tracking
+    // them ensures a subsequent build picks them up.
+    println!("cargo:rerun-if-changed={}", launcher_bin.display());
+    println!("cargo:rerun-if-changed={}", manager_bin.display());
+    println!("cargo:rerun-if-changed={}", manager_cdylib.display());
+
+    let mut artifacts: Vec<PathBuf> = Vec::new();
+
+    if launcher_bin.exists() {
+        artifacts.push(launcher_bin.clone());
+    } else {
+        println!(
+            "cargo:warning=codex-plus-packager: launcher binary not found at {} (skipping; re-run `cargo build --release` to pick it up)",
             launcher_bin.display()
-        ));
+        );
     }
-    if !manager_bin.exists() {
-        return Err(format!(
-            "manager binary not found at {}",
+
+    if manager_bin.exists() {
+        artifacts.push(manager_bin.clone());
+    } else {
+        println!(
+            "cargo:warning=codex-plus-packager: manager binary not found at {} (skipping; re-run `cargo build --release` to pick it up)",
             manager_bin.display()
-        ));
+        );
+    }
+
+    if manager_cdylib.exists() {
+        artifacts.push(manager_cdylib.clone());
+    } else {
+        println!(
+            "cargo:warning=codex-plus-packager: manager cdylib not found at {} (skipping)",
+            manager_cdylib.display()
+        );
+    }
+
+    if artifacts.is_empty() {
+        return Err("no build artifacts found to package".to_string());
     }
 
     let dist_dir = workspace_root.join("dist").join(platform);
     let app_dir = dist_dir.join("app");
     fs::create_dir_all(&app_dir).map_err(|e| format!("create app dir: {e}"))?;
 
-    let launcher_name = launcher_bin.file_name().unwrap().to_str().unwrap();
-    let manager_name = manager_bin.file_name().unwrap().to_str().unwrap();
-
-    let launcher_dest = app_dir.join(launcher_name);
-    let manager_dest = app_dir.join(manager_name);
-    copy_file(&launcher_bin, &launcher_dest)?;
-    copy_file(&manager_bin, &manager_dest)?;
+    let mut copied: Vec<(String, PathBuf)> = Vec::new();
+    for src in &artifacts {
+        let name = src
+            .file_name()
+            .and_then(|n| n.to_str())
+            .ok_or_else(|| format!("invalid file name: {}", src.display()))?
+            .to_string();
+        let dst = app_dir.join(&name);
+        copy_file(src, &dst)?;
+        copied.push((name, dst));
+    }
 
     let zip_name = format!("CodexPlusPlus-{version}-{platform}-{arch}.zip");
     let zip_path = dist_dir.join(&zip_name);
@@ -68,14 +111,16 @@ fn package_release() -> Result<(), String> {
     let mut zip = ZipWriter::new(zip_file);
     let options = SimpleFileOptions::default().compression_method(CompressionMethod::Deflated);
 
-    add_file_to_zip(&mut zip, &launcher_dest, launcher_name, options)?;
-    add_file_to_zip(&mut zip, &manager_dest, manager_name, options)?;
+    for (name, path) in &copied {
+        add_file_to_zip(&mut zip, path, name, options)?;
+    }
 
     zip.finish().map_err(|e| format!("finalize zip: {e}"))?;
 
     println!(
-        "cargo:warning=codex-plus-packager: created {}",
-        zip_path.display()
+        "cargo:warning=codex-plus-packager: created {} ({} files)",
+        zip_path.display(),
+        copied.len()
     );
     Ok(())
 }
@@ -92,9 +137,7 @@ fn workspace_root() -> Result<PathBuf, String> {
 }
 
 fn target_profile_dir() -> Result<PathBuf, String> {
-    let out_dir = PathBuf::from(
-        env::var("OUT_DIR").map_err(|_| "OUT_DIR not set".to_string())?,
-    );
+    let out_dir = PathBuf::from(env::var("OUT_DIR").map_err(|_| "OUT_DIR not set".to_string())?);
     // OUT_DIR = <target>/<profile>/build/<pkg>-<hash>/out
     // Going up 3 levels lands on <target>/<profile>.
     out_dir
@@ -127,6 +170,24 @@ fn binary_extension() -> &'static str {
     #[cfg(not(windows))]
     {
         ""
+    }
+}
+
+/// Returns the file name of the manager cdylib produced by the
+/// `codex-plus-manager` `[lib] name = "codex_plus_manager_lib"` with
+/// `crate-type` including `cdylib`.
+fn manager_cdylib_name() -> String {
+    #[cfg(windows)]
+    {
+        "codex_plus_manager_lib.dll".to_string()
+    }
+    #[cfg(target_os = "macos")]
+    {
+        "libcodex_plus_manager_lib.dylib".to_string()
+    }
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        "libcodex_plus_manager_lib.so".to_string()
     }
 }
 

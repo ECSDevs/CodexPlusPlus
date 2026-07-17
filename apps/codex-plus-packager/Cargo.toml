@@ -10,9 +10,11 @@ publish = false
 path = "src/lib.rs"
 
 [build-dependencies]
-# Artifact dependencies (bindeps) guarantee the manager and launcher BINARIES
-# are fully linked before this crate's build.rs runs. Regular lib deps only
-# ensure the library is built, not the binary target.
-codex-plus-manager = { path = "../codex-plus-manager/src-tauri", artifact = "bin:codex-plus-plus-manager" }
-codex-plus-launcher = { path = "../codex-plus-launcher", artifact = "bin:codex-plus-plus" }
+# Build-time dependency on the manager library ensures the manager's cdylib
+# (codex_plus_manager_lib.dll/.dylib/.so) is compiled before this build.rs
+# runs, so the DLL is available to copy into the dist bundle. We intentionally
+# do NOT use artifact dependencies (bindeps) here: that would force the manager
+# binary to link before the packager runs, which is unreliable on some setups.
+# The manager binary itself does not need to link successfully — only the lib.
+codex-plus-manager = { path = "../codex-plus-manager/src-tauri" }
 zip.workspace = true

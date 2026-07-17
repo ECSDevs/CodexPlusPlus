@@ -22,16 +22,29 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const tag = size === "icon" ? (variant === "outline" ? "md-outlined-icon-button" : "md-icon-button") : tagForVariant[variant];
     const content = React.Children.toArray(children);
     const firstChild = content[0];
-    const hasLeadingIcon = size !== "icon" && React.isValidElement(firstChild);
-    const label = hasLeadingIcon ? content.slice(1) : content;
+    const hasIconElement = React.isValidElement(firstChild);
+
+    if (size === "icon") {
+      return React.createElement(tag, {
+        ...props,
+        className: cn("m3-button", `m3-button--${size}`, className),
+        ref,
+      }, children);
+    }
+
+    const hasLeadingIcon = hasIconElement;
+    const labelContent = hasLeadingIcon ? content.slice(1) : content;
     const icon = hasLeadingIcon
-      ? React.cloneElement(firstChild, { slot: "icon" } as Record<string, string>)
+      ? React.cloneElement(firstChild as React.ReactElement, { slot: "icon" } as React.Attributes)
+      : null;
+    const label = labelContent.length > 0
+      ? React.createElement("span", { className: "m3-button-label" }, labelContent)
       : null;
     return React.createElement(tag, {
       ...props,
       className: cn("m3-button", `m3-button--${size}`, className),
       ref,
-    }, icon, label.length ? React.createElement("span", { className: "m3-button-label" }, label) : null);
+    }, icon, label);
   },
 );
 Button.displayName = "Button";
